@@ -6,7 +6,7 @@ import yt_dlp
 TOKEN = '8615971353:AAHKiEoXyYIPabTKL8EQ7802zJ7bg8oTULQ'
 bot = telebot.TeleBot(TOKEN, skip_pending=True)
 
-REQUIRED_CHANNEL = 'SmartDownloader2030@'
+REQUIRED_CHANNEL = '@SmartDownloader2030'
 
 # دالة التحقق من اشتراك المستخدم في القناة الإلزامية
 def check_subscription(user_id):
