@@ -3,11 +3,9 @@ import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import yt_dlp
 
-# قراءة التوكن بأمان من متغيرات البيئة في ريلواي
 TOKEN = os.getenv('TOKEN')
 bot = telebot.TeleBot(TOKEN)
 
-# معرف مجموعتك الإلزامي للاشتراك
 REQUIRED_CHANNEL = "@SmartDownloader2030"
 
 def check_membership(user_id):
@@ -37,16 +35,14 @@ def handle_url(message):
         bot.reply_to(message, "الرجاء إرسال رابط صحيح يبدأ بـ http أو https.")
         return
 
-    # إنشاء الأزرار التفاعلية لاختيار الدقة أو الصوت
     markup = InlineKeyboardMarkup()
     markup.row_width = 2
     markup.add(
-        InlineKeyboardButton("فيديو عالي (HD)", callback_data=f"hd|{url}"),
-        InlineKeyboardButton("فيديو منخفض (SD)", callback_data=f"sd|{url}"),
+        InlineKeyboardButton("فيديو (HD/مباشر)", callback_data=f"video|{url}"),
         InlineKeyboardButton("صوت فقط (MP3)", callback_data=f"mp3|{url}")
     )
     
-    bot.reply_to(message, "اختر الجودة المطلوبة للتحميل:", reply_markup=markup)
+    bot.reply_to(message, "اختر الصيغة المطلوبة للتحميل:", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
@@ -56,19 +52,24 @@ def callback_query(call):
     
     action, url = data_parts
     bot.answer_callback_query(call.id, "جاري بدء التحميل...")
-    bot.edit_message_text("جاري معالجة الطلب، يرجى الانتظار...", call.message.chat.id, call.message.message_id)
+    bot.edit_message_text("جاري معالجة الطلب عبر السيرفر، يرجى الانتظار...", call.message.chat.id, call.message.message_id)
 
-    ydl_opts = {}
-    if action == 'hd':
-        ydl_opts = {'format': 'bestvideo+bestaudio/best', 'outtmpl': 'video.%(ext)s'}
-    elif action == 'sd':
-        ydl_opts = {'format': 'worst', 'outtmpl': 'video.%(ext)s'}
-    elif action == 'mp3':
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': '192'}],
-            'outtmpl': 'audio.%(ext)s'
-        }
+    # إعدادات متقدمة لتجاوز حظر يوتيوب وضمان نجاح التحميل
+    ydl_opts = {
+        'outtmpl': 'downloaded_media.%(ext)s',
+        'noplaylist': True,
+        'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+    }
+
+    if action == 'mp3':
+        ydl_opts['format'] = 'bestaudio/best'
+        ydl_opts['postprocessors'] = [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }]
+    else:
+        ydl_opts['format'] = 'best[ext=mp4]/best'
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -77,7 +78,7 @@ def callback_query(call):
             if action == 'mp3':
                 filename = os.path.splitext(filename)[0] + '.mp3'
 
-        bot.send_message(call.message.chat.id, "جاري إرسال الملف...")
+        bot.send_message(call.message.chat.id, "جاري إرسال الملف إليك...")
         with open(filename, 'rb') as f:
             if action == 'mp3':
                 bot.send_audio(call.message.chat.id, f)
@@ -88,7 +89,7 @@ def callback_query(call):
             os.remove(filename)
 
     except Exception as e:
-        bot.send_message(call.message.chat.id, f"حدث خطأ أثناء التحميل: {str(e)}")
+        bot.send_message(call.message.chat.id, f"حدث خطأ أثناء التحميل: تأكد من أن الرابط صحيح وعام.")
 
 print("Bot is running...")
-bot.infinity_polling(skip_pending=True)
+bot.infinity_polling(skip_pending=True, interval=2, timeout=20)
