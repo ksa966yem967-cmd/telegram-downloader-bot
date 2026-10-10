@@ -4,7 +4,7 @@ import yt_dlp
 
 # استبدل هذا التوكن بتوكن بوتك الصحيح إذا لزم الأمر، أو سيتم سحبه تلقائياً
 TOKEN = '8615971353:AAHKiEoXyYIPabTKL8EQ7802zJ7bg8oTULQ'
-bot = telebot.TeleBot(TOKEN, skip_pending=True)
+bot = telebot.TeleBot(8615971353:AAHKiEOxYyIPabTKL8EQ7802zJ7bg8oTULQ)
 
 REQUIRED_CHANNEL = '@SmartDownloader2030'
 
