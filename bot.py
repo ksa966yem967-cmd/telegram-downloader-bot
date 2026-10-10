@@ -22,7 +22,7 @@ def send_welcome(message):
     if not check_membership(message.from_user.id):
         bot.reply_to(message, f"عذراً! يجب عليك الانضمام إلى مجموعتنا أولاً لاستخدام البوت:\n{REQUIRED_CHANNEL}")
         return
-    bot.reply_to(message, "أهلاً بك في بوت التحميل الشامل! أرسل لي رابط فيديو من (يوتيوب، إنستغرام، تيك توك) وسأعطيك خيارات الدقة والصوت.")
+    bot.reply_to(message, "أهلاً بك في بوت التحميل الشامل! أرسل لي رابط فيديو من (يوتيوب، إنستغرام، تيك توك).")
 
 @bot.message_handler(func=lambda message: True)
 def handle_url(message):
@@ -38,7 +38,7 @@ def handle_url(message):
     markup = InlineKeyboardMarkup()
     markup.row_width = 2
     markup.add(
-        InlineKeyboardButton("فيديو (HD/مباشر)", callback_data=f"video|{url}"),
+        InlineKeyboardButton("تحميل فيديو", callback_data=f"video|{url}"),
         InlineKeyboardButton("صوت فقط (MP3)", callback_data=f"mp3|{url}")
     )
     
@@ -52,24 +52,25 @@ def callback_query(call):
     
     action, url = data_parts
     bot.answer_callback_query(call.id, "جاري بدء التحميل...")
-    bot.edit_message_text("جاري معالجة الطلب عبر السيرفر، يرجى الانتظار...", call.message.chat.id, call.message.message_id)
+    bot.edit_message_text("جاري معالجة الطلب، يرجى الانتظار...", call.message.chat.id, call.message.message_id)
 
-    # إعدادات متقدمة لتجاوز حظر يوتيوب وضمان نجاح التحميل
+    # استخدام صيغ مدمجة لا تحتاج إلى ffmpeg نهائياً
     ydl_opts = {
         'outtmpl': 'downloaded_media.%(ext)s',
         'noplaylist': True,
-        'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
     }
 
     if action == 'mp3':
-        ydl_opts['format'] = 'bestaudio/best'
+        ydl_opts['format'] = 'bestaudio'
         ydl_opts['postprocessors'] = [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }]
     else:
-        ydl_opts['format'] = 'best[ext=mp4]/best'
+        # تحميل أفضل صيغة فيديو مدمجة مباشرة بدون دمج
+        ydl_opts['format'] = 'best/bestvideo+bestaudio'
+        ydl_opts['format'] = 'b'
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
