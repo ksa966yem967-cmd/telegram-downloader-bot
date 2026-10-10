@@ -7,6 +7,7 @@ TOKEN = os.getenv('TOKEN')
 bot = telebot.TeleBot(TOKEN)
 
 REQUIRED_CHANNEL = "@SmartDownloader2030"
+url_storage = {}
 
 def check_membership(user_id):
     try:
@@ -35,22 +36,28 @@ def handle_url(message):
         bot.reply_to(message, "الرجاء إرسال رابط صحيح يبدأ بـ http أو https.")
         return
 
+    user_id = message.from_user.id
+    url_storage[user_id] = url
+
     markup = InlineKeyboardMarkup()
     markup.row_width = 2
     markup.add(
-        InlineKeyboardButton("تحميل فيديو", callback_data=f"video|{url}"),
-        InlineKeyboardButton("صوت فقط (MP3)", callback_data=f"mp3|{url}")
+        InlineKeyboardButton("تحميل فيديو", callback_data="video"),
+        InlineKeyboardButton("صوت فقط (MP3)", callback_data="mp3")
     )
     
     bot.reply_to(message, "اختر الصيغة المطلوبة للتحميل:", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
-    data_parts = call.data.split('|', 1)
-    if len(data_parts) != 2:
+    action = call.data
+    user_id = call.from_user.id
+
+    if user_id not in url_storage:
+        bot.answer_callback_query(call.id, "انتهت صلاحية الرابط، أرسل الرابط مجدداً.")
         return
-    
-    action, url = data_parts
+
+    url = url_storage[user_id]
     bot.answer_callback_query(call.id, "جاري بدء التحميل...")
     bot.edit_message_text("جاري معالجة الطلب، يرجى الانتظار...", call.message.chat.id, call.message.message_id)
 
