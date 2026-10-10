@@ -89,5 +89,5 @@ def callback_query(call):
         bot.send_message(call.message.chat.id, f"حدث خطأ أثناء التحميل: تأكد من أن الرابط صحيح وعام.")
 
 print("Bot is running...")
-# إزالة الـ webhooks القديمة وحل تعارض الـ 409 نهائياً
-bot.infinity_polling(skip_pending=True, remove_webhook=True)
+bot.remove_webhook()
+bot.infinity_polling(skip_pending=True)
