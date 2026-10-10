@@ -54,10 +54,10 @@ def callback_query(call):
     bot.answer_callback_query(call.id, "جاري بدء التحميل...")
     bot.edit_message_text("جاري معالجة الطلب، يرجى الانتظار...", call.message.chat.id, call.message.message_id)
 
-    # استخدام صيغ مدمجة لا تحتاج إلى ffmpeg نهائياً
     ydl_opts = {
         'outtmpl': 'downloaded_media.%(ext)s',
         'noplaylist': True,
+        'format': 'b',
     }
 
     if action == 'mp3':
@@ -67,10 +67,6 @@ def callback_query(call):
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }]
-    else:
-        # تحميل أفضل صيغة فيديو مدمجة مباشرة بدون دمج
-        ydl_opts['format'] = 'best/bestvideo+bestaudio'
-        ydl_opts['format'] = 'b'
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -93,4 +89,5 @@ def callback_query(call):
         bot.send_message(call.message.chat.id, f"حدث خطأ أثناء التحميل: تأكد من أن الرابط صحيح وعام.")
 
 print("Bot is running...")
-bot.infinity_polling(skip_pending=True, interval=2, timeout=20)
+# إزالة الـ webhooks القديمة وحل تعارض الـ 409 نهائياً
+bot.infinity_polling(skip_pending=True, remove_webhook=True)
