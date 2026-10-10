@@ -2,7 +2,7 @@ import os
 import telebot
 import yt_dlp
 
-TOKEN = '8615971353:AAHKiEOxYyIPabTKL8EQ7802zJ7bg8oTULQ'
+TOKEN = os.getenv('TOKEN')
 bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['start', 'help'])
@@ -33,7 +33,6 @@ def download_video(message):
         with open(filename, 'rb') as video_file:
             bot.send_video(message.chat.id, video_file)
 
-        # حذف الملف بعد الإرسال لتنظيف مساحة السيرفر
         if os.path.exists(filename):
             os.remove(filename)
 
